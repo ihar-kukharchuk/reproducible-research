@@ -3,31 +3,19 @@ title: "JHU: Reproducible Research [course project 1: activity data analysis]"
 author: "Ihar Kukharchuk"
 date: "March 31, 2018"
 output: 
-  html_document:
+  html_document: 
     keep_md: true
 ---
 
-```{r setup, include=FALSE}
-library(ggplot2)
-library(gridExtra)
 
-## just to force appropriate 'locale'
-Sys.setlocale(category = "LC_ALL", locale = "C")
-
-## configure plots template: size and location
-knitr::opts_template$set(plots = list(fig.align = 'center',
-                                      fig.height = 2,
-                                      fig.width = 7,
-                                      fig.path = 'figures/',
-                                      dev = 'png'))
-```
 
 ### Loading and preprocessing the data
 
 Separate function `obtain_data` is added to check the presence of RAW data
 locally, if data isn't present it will be loaded from the internet.
 
-```{r}
+
+```r
 ## obtain the data
 obtain_data <- function(filename, archive_filename, url_location) {
         if (!file.exists(filename) && !file.exists(archive_filename)) {
@@ -54,7 +42,8 @@ In provided dataset time is presented in HHMM format. The function
 `convert_to_hm_time` is added in order to avoid gaps on graphs (for example
 between 1259 and 1300 as far as time is presented by integer type).
 
-```{r}
+
+```r
 ## clean and prepare the data
 act_df_orig$date <- as.Date(act_df_orig$date, format = "%Y-%m-%d")
 
@@ -72,12 +61,14 @@ act_df_nona <- na.omit(act_df_orig)
 
 ### What is mean total number of steps taken per day?
 
-```{r}
+
+```r
 ## 1. Calculate the total number of steps taken per day
 total_steps_per_day_nona <- aggregate(steps ~ date, act_df_nona, sum)
 ```
 
-```{r total-of-steps-per-day-orig, opts.label = 'plots'}
+
+```r
 ## 2. Make a histogram of the total number of steps taken each day
 chart <- ggplot(total_steps_per_day_nona, aes(date, steps)) +
         geom_col() +
@@ -88,19 +79,23 @@ chart <- ggplot(total_steps_per_day_nona, aes(date, steps)) +
 chart
 ```
 
-```{r}
+<img src="figures/total-of-steps-per-day-orig-1.png" style="display: block; margin: auto;" />
+
+
+```r
 ## 3. Calculate and report the mean and median of the total number of steps
 ##    taken per day
 mean_value_nona <- mean(total_steps_per_day_nona$steps)
 median_value_nona <- median(total_steps_per_day_nona$steps)
 ```
 The *mean* of the total number of steps taken per day using original dataset:
-`r sprintf("%.2f", mean_value_nona)`. The *median* of the total number of steps
-taken per day using original dataset: `r sprintf("%.2f", median_value_nona)`.
+10766.19. The *median* of the total number of steps
+taken per day using original dataset: 10765.00.
 
 ### What is the average daily activity pattern?
 
-```{r mean-of-steps-per-interval-orig, opts.label = 'plots'}
+
+```r
 ## 1. Make a time series plot (i.e. type = "l") of the 5-minute interval
 ##    (x-axis) and the average number of steps taken, averaged across
 ##    all days (y-axis)
@@ -116,38 +111,44 @@ chart <- ggplot(mean_steps_per_interval_nona, aes(interval, steps, group = 1)) +
 chart
 ```
 
-```{r}
+<img src="figures/mean-of-steps-per-interval-orig-1.png" style="display: block; margin: auto;" />
+
+
+```r
 ## 2. Which 5-minute interval, on average across all the days in the dataset,
 ##    contains the maximum number of steps?
 max_num_of_steps_interval_nona <- mean_steps_per_interval_nona[
         which.max(mean_steps_per_interval_nona$steps), "interval"]
 ```
-The average maximum number of steps taken on `r max_num_of_steps_interval_nona`.
+The average maximum number of steps taken on 08:35.
 
 ### Imputing missing values
 
-```{r}
+
+```r
 ## 1. Calculate and report the total number of missing values in the
 ##    dataset (i.e. the total number of rows with NAs)
 total_number_of_missing_values <- sum(is.na(act_df_orig))
 ```
 Total number of missing values in provided dataset is
-`r total_number_of_missing_values`.
+2304.
 
-```{r}
+
+```r
 ## 2. Devise a strategy for filling in all of the missing values in the
 ##    dataset. The strategy does not need to be sophisticated. For example,
 ##    you could use the mean/median for that day, or the mean for that
 ##    5-minute interval, etc.
 ```
-As far as dataset contains `r total_number_of_missing_values` missing values
+As far as dataset contains 2304 missing values
 it is important to fill it with values to complete the task. The 'interval'
 strategy was taken. This strategy fills NA value in particular interval with
 the mean value for intervals across all days. NOTE: the strategy with mean
 value per day was considering but ignored because couple of days do not have
 data at all, for example 1 or 8 of October.
 
-```{r}
+
+```r
 ## 3. Create a new dataset that is equal to the original dataset but with
 ##    the missing data filled in.
 mean_steps_per_interval_orig <- aggregate(steps ~ interval, act_df_orig, mean)
@@ -158,10 +159,10 @@ act_df_mean$steps <- ifelse(is.na(act_df_mean$steps.x),
                             act_df_mean$steps.y,
                             act_df_mean$steps.x) 
 act_df_mean <- act_df_mean[c("steps", "date", "interval")]
-
 ```
 
-```{r total-of-steps-per-day-mean, opts.label = 'plots'}
+
+```r
 ## 4. Make a histogram of the total number of steps taken each day and
 ##    Calculate and report the mean and median total number of steps taken per
 ##    day. Do these values differ from the estimates from the first part of the
@@ -176,24 +177,29 @@ chart <- ggplot(total_steps_per_day_nona_mean, aes(date, steps)) +
         ggtitle("Total number of steps per day") +
         theme(plot.title = element_text(hjust = 0.5))
 chart
+```
 
+<img src="figures/total-of-steps-per-day-mean-1.png" style="display: block; margin: auto;" />
+
+```r
 mean_value_nona_mean <- mean(total_steps_per_day_nona_mean$steps)
 median_value_nona_mean <- median(total_steps_per_day_nona_mean$steps)
 ```
 The *mean* of the total number of steps taken per day according to modified
-dataset using 'interval' strategy: `r sprintf("%.2f", mean_value_nona_mean)`.
+dataset using 'interval' strategy: 10766.19.
 The *median* of the total number of steps taken per day according to modified
-dataset using 'interval' strategy: `r sprintf("%.2f", median_value_nona_mean)`.
+dataset using 'interval' strategy: 10766.19.
 
 Notice the small difference between *median* values in comparison with previous
-calculations (`r median_value_nona_mean - median_value_nona`). This is the
+calculations (1.1886792). This is the
 result of adding mean values instead of NA values, thus, using this strategy
 we also increased the amount of median values equal to the mean. This is the
 reason of getting such result as an outcome.
 
 ### Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+
+```r
 ## 1. Create a new factor variable in the dataset with two levels "weekday"
 ##    and "weekend" indicating whether a given date is a weekday or weekend day.
 act_df_mean$daytype <- as.factor(
@@ -203,7 +209,8 @@ act_df_mean_wd <- act_df_mean[act_df_mean$daytype == "weekday",]
 act_df_mean_we <- act_df_mean[act_df_mean$daytype == "weekend",]
 ```
 
-```{r mean-of-steps-per-interval-mean, opts.label = 'plots', fig.height = 4}
+
+```r
 ## 2. Make a panel plot containing a time series plot (i.e. type = "l") of the
 ##    5-minute interval (x-axis) and the average number of steps taken,
 ##    averaged across all weekday days or weekend days (y-axis). See the README
@@ -231,3 +238,5 @@ chart1 <- ggplot(mean_steps_per_interval_we, aes(interval, steps, group = 1)) +
 
 grid.arrange(chart0, chart1, nrow = 2)
 ```
+
+<img src="figures/mean-of-steps-per-interval-mean-1.png" style="display: block; margin: auto;" />
